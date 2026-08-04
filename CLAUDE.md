@@ -55,6 +55,24 @@ adb shell dumpsys deviceidle whitelist +com.ablesign.bootlauncher
 
 The `am force-stop` before the toggle is required — without it, on some OEMs the accessibility framework keeps a stale binding and never calls `onCreate()`.
 
+## Deploy to Realme TV (additional steps)
+
+Realme/OPPO Android blocks third-party apps from auto-starting by default via the `AUTO_LAUNCH` appops. Without this, the accessibility service never starts at boot and `BOOT_COMPLETED` is silently dropped.
+
+```bash
+# Allow auto-start (Realme/OPPO specific — required or nothing runs at boot)
+adb shell appops set com.ablesign.bootlauncher AUTO_LAUNCH allow
+adb shell appops set com.ablesign.bootlauncher RUN_IN_BACKGROUND allow
+
+# Then run the standard deploy steps above (accessibility service toggle, battery whitelist)
+```
+
+Also verify the setting survived a reboot:
+```bash
+adb shell appops get com.ablesign.bootlauncher AUTO_LAUNCH
+# Should print: AUTO_LAUNCH: allow
+```
+
 ## Architecture
 
 Three components work in layers, ordered by reliability on stock Android vs. OEM-hardened devices:
